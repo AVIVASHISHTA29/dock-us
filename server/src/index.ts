@@ -11,7 +11,25 @@ const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
 const TMDB_BASE_URL =
   process.env.TMDB_BASE_URL || "https://api.themoviedb.org/3";
 
-// Types
+// TMDB API Types
+interface TMDBMovieResult {
+  id: number;
+  title: string;
+  overview: string;
+  poster_path: string | null;
+  release_date: string;
+  vote_average: number;
+}
+
+interface TMDBResponse {
+  results: TMDBMovieResult[];
+}
+
+interface TMDBMovieDetails extends TMDBMovieResult {
+  status_code?: number;
+}
+
+// App Types
 interface Movie {
   id: number;
   title: string;
@@ -95,7 +113,7 @@ const resolvers = {
           return [];
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as TMDBResponse;
         console.log("TMDB API Response:", JSON.stringify(data, null, 2));
 
         if (!data.results) {
@@ -103,7 +121,7 @@ const resolvers = {
           return [];
         }
 
-        return data.results.map((movie: any) => ({
+        return data.results.map((movie) => ({
           id: movie.id,
           title: movie.title,
           overview: movie.overview || "",
@@ -145,7 +163,7 @@ const resolvers = {
           return [];
         }
 
-        const data = await response.json();
+        const data = (await response.json()) as TMDBResponse;
         console.log("TMDB Search API Response:", JSON.stringify(data, null, 2));
 
         if (!data.results) {
@@ -153,7 +171,7 @@ const resolvers = {
           return [];
         }
 
-        return data.results.map((movie: any) => ({
+        return data.results.map((movie) => ({
           id: movie.id,
           title: movie.title,
           overview: movie.overview || "",
@@ -193,7 +211,7 @@ const resolvers = {
           return null;
         }
 
-        const movie = await response.json();
+        const movie = (await response.json()) as TMDBMovieDetails;
         console.log("TMDB Movie API Response:", JSON.stringify(movie, null, 2));
 
         if (!movie || movie.status_code === 34) {
