@@ -1,6 +1,10 @@
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
+import dotenv from "dotenv";
 import fetch from "node-fetch";
+
+// Load environment variables from .env file
+dotenv.config();
 
 // Environment variables (you'll need to create a .env file)
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
@@ -11,9 +15,9 @@ interface Movie {
   id: number;
   title: string;
   overview: string;
-  poster_path: string;
-  release_date: string;
-  vote_average: number;
+  posterPath: string | null;
+  releaseDate: string;
+  voteAverage: number;
 }
 
 interface Review {
@@ -58,8 +62,8 @@ const typeDefs = `#graphql
     title: String!
     overview: String!
     posterPath: String
-    releaseDate: String
-    voteAverage: Float
+    releaseDate: String!
+    voteAverage: Float!
     reviews: [Review!]!
   }
 
@@ -88,26 +92,150 @@ const resolvers = {
   Query: {
     books: () => books,
     popularMovies: async () => {
-      const response = await fetch(
-        `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}&language=en-US&page=1`
-      );
-      const data = await response.json();
-      return data.results;
+      try {
+        if (!TMDB_API_KEY) {
+          console.error("TMDB_API_KEY is not set in environment variables");
+          return [];
+        }
+
+        const response = await fetch(
+          `${TMDB_BASE_URL}/discover/movie?language=en-US&page=1&sort_by=popularity.desc`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${TMDB_API_KEY.trim()}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("TMDB API Error:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+          });
+          return [];
+        }
+
+        const data = await response.json();
+        console.log("TMDB API Response:", JSON.stringify(data, null, 2));
+
+        if (!data.results) {
+          console.error("No results in TMDB response:", data);
+          return [];
+        }
+
+        return data.results.map((movie: any) => ({
+          id: movie.id,
+          title: movie.title,
+          overview: movie.overview || "",
+          posterPath: movie.poster_path,
+          releaseDate: movie.release_date || "",
+          voteAverage: Number(movie.vote_average || 0),
+        }));
+      } catch (error) {
+        console.error("Error fetching popular movies:", error);
+        return [];
+      }
     },
     searchMovies: async (_: any, { query }: { query: string }) => {
-      const response = await fetch(
-        `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&language=en-US&query=${encodeURIComponent(
-          query
-        )}&page=1`
-      );
-      const data = await response.json();
-      return data.results;
+      try {
+        if (!TMDB_API_KEY) {
+          console.error("TMDB_API_KEY is not set in environment variables");
+          return [];
+        }
+
+        const response = await fetch(
+          `${TMDB_BASE_URL}/search/movie?language=en-US&query=${encodeURIComponent(
+            query
+          )}&page=1`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${TMDB_API_KEY.trim()}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("TMDB API Error:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+          });
+          return [];
+        }
+
+        const data = await response.json();
+        console.log("TMDB Search API Response:", JSON.stringify(data, null, 2));
+
+        if (!data.results) {
+          console.error("No results in TMDB search response:", data);
+          return [];
+        }
+
+        return data.results.map((movie: any) => ({
+          id: movie.id,
+          title: movie.title,
+          overview: movie.overview || "",
+          posterPath: movie.poster_path,
+          releaseDate: movie.release_date || "",
+          voteAverage: Number(movie.vote_average || 0),
+        }));
+      } catch (error) {
+        console.error("Error searching movies:", error);
+        return [];
+      }
     },
     movie: async (_: any, { id }: { id: number }) => {
-      const response = await fetch(
-        `${TMDB_BASE_URL}/movie/${id}?api_key=${TMDB_API_KEY}&language=en-US`
-      );
-      return response.json();
+      try {
+        if (!TMDB_API_KEY) {
+          console.error("TMDB_API_KEY is not set in environment variables");
+          return null;
+        }
+
+        const response = await fetch(
+          `${TMDB_BASE_URL}/movie/${id}?language=en-US`,
+          {
+            headers: {
+              accept: "application/json",
+              Authorization: `Bearer ${TMDB_API_KEY.trim()}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("TMDB API Error:", {
+            status: response.status,
+            statusText: response.statusText,
+            body: errorText,
+          });
+          return null;
+        }
+
+        const movie = await response.json();
+        console.log("TMDB Movie API Response:", JSON.stringify(movie, null, 2));
+
+        if (!movie || movie.status_code === 34) {
+          console.error("No movie found or invalid response:", movie);
+          return null;
+        }
+
+        return {
+          id: movie.id,
+          title: movie.title,
+          overview: movie.overview || "",
+          posterPath: movie.poster_path,
+          releaseDate: movie.release_date || "",
+          voteAverage: Number(movie.vote_average || 0),
+        };
+      } catch (error) {
+        console.error("Error fetching movie:", error);
+        return null;
+      }
     },
     movieReviews: (_: any, { movieId }: { movieId: number }) => {
       return reviews.filter((review) => review.movieId === movieId);
@@ -130,8 +258,8 @@ const resolvers = {
   },
   Movie: {
     posterPath: (movie: Movie) =>
-      movie.poster_path
-        ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+      movie.posterPath
+        ? `https://image.tmdb.org/t/p/w500${movie.posterPath}`
         : null,
     reviews: (movie: Movie) =>
       reviews.filter((review) => review.movieId === movie.id),
