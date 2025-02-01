@@ -7,8 +7,8 @@ node_modules
 coverage
 
 # Next.js
-.next/
-out/
+**/.next/
+**/out/
 build
 dist
 
@@ -40,4 +40,18 @@ yarn-error.log*
 
 # Typescript
 *.tsbuildinfo
-next-env.d.ts 
+next-env.d.ts
+
+# Turbo
+.turbo
+
+# Build outputs
+**/dist/
+**/.next/
+**/build/
+**/out/
+
+# Cache
+**/.eslintcache
+.cache
+**/tsconfig.tsbuildinfo 
