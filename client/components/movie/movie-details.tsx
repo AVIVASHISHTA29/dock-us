@@ -32,11 +32,11 @@ export function MovieDetails({ movie, onSubmitReview }: MovieDetailsProps) {
     try {
       setIsSubmitting(true);
       await onSubmitReview(review);
-      setReview("");
     } catch (err) {
       console.error("Error submitting review:", err);
     } finally {
       setIsSubmitting(false);
+      setReview("");
     }
   };
 
@@ -46,7 +46,7 @@ export function MovieDetails({ movie, onSubmitReview }: MovieDetailsProps) {
         posterPath={movie.posterPath}
         title={movie.title}
         voteAverage={movie.voteAverage}
-        releaseDate={movie.releaseDate}
+        releaseDate={movie.releaseDate || ""}
       />
       <div className="space-y-8">
         <MovieInfo title={movie.title} overview={movie.overview} />
@@ -159,10 +159,10 @@ function ReviewList({ reviews }: ReviewListProps) {
       <h2 className="text-2xl font-semibold mb-4">
         Reviews
         <Badge variant="secondary" className="ml-2">
-          {reviews.length}
+          {reviews?.length || 0}
         </Badge>
       </h2>
-      {reviews.length === 0 ? (
+      {reviews?.length === 0 ? (
         <Card className="p-6 text-center bg-muted/50">
           <p className="text-muted-foreground">
             No reviews yet. Be the first to write one!
@@ -170,7 +170,7 @@ function ReviewList({ reviews }: ReviewListProps) {
         </Card>
       ) : (
         <div className="space-y-4">
-          {reviews.map((review) => (
+          {reviews?.map((review) => (
             <motion.div
               key={review.id}
               initial={{ opacity: 0, y: 20 }}
