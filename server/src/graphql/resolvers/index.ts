@@ -44,7 +44,12 @@ export const resolvers = {
         ? `${config.tmdb.imageBaseUrl}${movie.posterPath}`
         : null,
     reviews: (movie: Movie) =>
-      reviews.filter((review) => review.movieId === movie.id),
+      reviews
+        .filter((review) => review.movieId === movie.id)
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        ),
   },
 };
 
