@@ -8,58 +8,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Skeleton } from "@/components/ui/skeleton";
-import { gql, useQuery } from "@apollo/client";
+import { GET_POPULAR_MOVIES, SEARCH_MOVIES } from "@/graphql/movie";
+import {
+  Movie,
+  PopularMoviesResponse,
+  SearchMoviesResponse,
+} from "@/types/movie";
+import { useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
-
-const GET_POPULAR_MOVIES = gql`
-  query GetPopularMovies {
-    popularMovies {
-      id
-      title
-      overview
-      posterPath
-      voteAverage
-    }
-  }
-`;
-
-const SEARCH_MOVIES = gql`
-  query SearchMovies($query: String!) {
-    searchMovies(query: $query) {
-      id
-      title
-      overview
-      posterPath
-      voteAverage
-    }
-  }
-`;
-
-interface Movie {
-  id: number;
-  title: string;
-  overview: string;
-  posterPath: string | null;
-  voteAverage: number;
-}
+import { MovieGridSkeleton } from "../skeletons/movie-grid-skeleton";
 
 export default function MovieList() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("query");
   const [sortBy, setSortBy] = useState<"rating" | "title">("rating");
 
-  const { loading, error, data } = useQuery(
-    searchQuery ? SEARCH_MOVIES : GET_POPULAR_MOVIES,
-    {
-      variables: searchQuery ? { query: searchQuery } : undefined,
-    }
-  );
+  const { loading, error, data } = useQuery<
+    SearchMoviesResponse | PopularMoviesResponse
+  >(searchQuery ? SEARCH_MOVIES : GET_POPULAR_MOVIES, {
+    variables: searchQuery ? { query: searchQuery } : undefined,
+  });
 
   if (loading) return <MovieGridSkeleton />;
   if (error)
@@ -70,7 +43,9 @@ export default function MovieList() {
       </div>
     );
 
-  let movies: Movie[] = searchQuery ? data?.searchMovies : data?.popularMovies;
+  let movies: Movie[] = searchQuery
+    ? (data as SearchMoviesResponse)?.searchMovies
+    : (data as PopularMoviesResponse)?.popularMovies;
 
   // Sort movies based on selected criteria
   if (movies) {
@@ -152,30 +127,6 @@ export default function MovieList() {
               </Card>
             </Link>
           </motion.div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-function MovieGridSkeleton() {
-  return (
-    <div className="space-y-6">
-      <div className="flex justify-end">
-        <Skeleton className="h-10 w-[180px]" />
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {Array.from({ length: 8 }).map((_, i) => (
-          <Card key={i} className="h-full">
-            <CardContent className="p-0">
-              <Skeleton className="w-full aspect-[2/3]" />
-            </CardContent>
-            <CardFooter className="flex flex-col items-start gap-2 p-4">
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-8 w-full" />
-              <Skeleton className="h-4 w-1/4" />
-            </CardFooter>
-          </Card>
         ))}
       </div>
     </div>

@@ -9,7 +9,15 @@ export interface Movie {
   title: string;
   overview: string;
   posterPath: string | null;
-  releaseDate: string;
+  releaseDate?: string;
   voteAverage: number;
-  reviews: Review[];
+  reviews?: Review[];
+}
+
+export interface PopularMoviesResponse {
+  popularMovies: Movie[];
+}
+
+export interface SearchMoviesResponse {
+  searchMovies: Movie[];
 }
