@@ -6,7 +6,7 @@ import fetch from "node-fetch";
 // Load environment variables from .env file
 dotenv.config();
 
-// Environment variables (you'll need to create a .env file)
+// Environment variables
 const TMDB_API_KEY = process.env.TMDB_API_KEY || "";
 const TMDB_BASE_URL =
   process.env.TMDB_BASE_URL || "https://api.themoviedb.org/3";
