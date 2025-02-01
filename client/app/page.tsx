@@ -1,18 +1,9 @@
 "use client";
 import MovieList from "@/components/movie-list";
+import SearchBar from "@/components/search-bar";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import dynamic from "next/dynamic";
 import { Suspense } from "react";
-
-const SearchBar = dynamic(() => import("@/components/search-bar"), {
-  ssr: false,
-  loading: () => (
-    <div className="w-full max-w-xl mx-auto mb-8">
-      <Skeleton className="w-full h-10" />
-    </div>
-  ),
-});
 
 function PageContent() {
   return (
