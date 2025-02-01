@@ -1,5 +1,8 @@
 "use client";
 
+import { HeaderSkeleton } from "@/components/skeletons/header-skeleton";
+import { MovieListSkeleton } from "@/components/skeletons/movie-list-skeleton";
+import { SearchBarSkeleton } from "@/components/skeletons/search-bar-skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import dynamic from "next/dynamic";
@@ -7,7 +10,7 @@ import { Suspense } from "react";
 
 const SearchBar = dynamic(() => import("@/components/common/search-bar"), {
   ssr: false,
-  loading: () => <Skeleton className="w-full max-w-xl mx-auto h-10" />,
+  loading: () => <SearchBarSkeleton />,
 });
 
 const MovieList = dynamic(() => import("@/components/home/movie-list"), {
@@ -22,16 +25,6 @@ function Header() {
       <p className="text-muted-foreground">
         Discover and review your favorite movies
       </p>
-    </div>
-  );
-}
-
-function MovieListSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {[...Array(8)].map((_, i) => (
-        <Skeleton key={i} className="aspect-[2/3]" />
-      ))}
     </div>
   );
 }
@@ -53,14 +46,9 @@ export default function Home() {
       <Suspense
         fallback={
           <div className="container mx-auto px-4 py-8 space-y-6">
-            <div className="flex flex-col space-y-2">
-              <Skeleton className="h-10 w-64" />
-              <Skeleton className="h-6 w-96" />
-            </div>
+            <HeaderSkeleton />
             <Skeleton className="h-px w-full" />
-            <div className="w-full max-w-xl mx-auto">
-              <Skeleton className="w-full h-10" />
-            </div>
+            <SearchBarSkeleton />
             <MovieListSkeleton />
           </div>
         }

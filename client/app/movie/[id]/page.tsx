@@ -1,7 +1,7 @@
 "use client";
 
-import { MovieDetailSkeleton } from "@/components/movie/movie-detail-skeleton";
 import { MovieDetails } from "@/components/movie/movie-details";
+import { MovieDetailSkeleton } from "@/components/skeletons/movie-detail-skeleton";
 import { Button } from "@/components/ui/button";
 import { useMovie } from "@/hooks/use-movie";
 import { motion } from "framer-motion";
