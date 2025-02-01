@@ -1,23 +1,36 @@
 import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
+import { expressMiddleware } from "@apollo/server/express4";
+import cors from "cors";
+import express from "express";
 import { config } from "./config/index.js";
 import { resolvers } from "./graphql/resolvers/index.js";
 import { typeDefs } from "./graphql/schemas/index.js";
 
 async function startServer() {
-  // The ApolloServer constructor requires two parameters: your schema
-  // definition and your set of resolvers.
+  const app = express();
+
+  // Enable CORS
+  app.use(cors({ origin: "*" }));
+  app.use(express.json());
+
+  // Initialize Apollo Server
   const server = new ApolloServer({
     typeDefs,
     resolvers,
   });
 
-  // Start the server
-  const { url } = await startStandaloneServer(server, {
-    listen: { port: config.server.port as number },
-  });
+  await server.start();
 
-  console.log(`🚀 Server ready at: ${url}`);
+  app.use(
+    "/graphql",
+    expressMiddleware(server) as unknown as express.RequestHandler
+  );
+
+  app.listen(config.server.port, () => {
+    console.log(
+      `🚀 Server ready at http://localhost:${config.server.port}/graphql`
+    );
+  });
 }
 
 startServer().catch((error) => {
