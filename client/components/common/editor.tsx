@@ -29,7 +29,7 @@ import {
   Strikethrough,
   UnderlineIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 const RichTextEditor = ({
   value,
@@ -77,6 +77,12 @@ const RichTextEditor = ({
       onChange(editor.getHTML());
     },
   });
+
+  useEffect(() => {
+    if (editor && editor.getHTML() !== value) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
   return (
     <>

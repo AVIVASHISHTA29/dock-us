@@ -32,11 +32,11 @@ export function MovieDetails({ movie, onSubmitReview }: MovieDetailsProps) {
     try {
       setIsSubmitting(true);
       await onSubmitReview(review);
+      setReview("");
     } catch (err) {
       console.error("Error submitting review:", err);
     } finally {
       setIsSubmitting(false);
-      setReview("");
     }
   };
 
