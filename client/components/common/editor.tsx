@@ -42,7 +42,7 @@ const RichTextEditor = ({
     editorProps: {
       attributes: {
         class:
-          "text-primary prose-sm min-h-[150px] max-h-[150px] w-full rounded-md rounded-br-none rounded-bl-none border border-input bg-transparent px-3 py-2 border-b-0 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 overflow-auto",
+          "text-primary prose-sm min-h-[150px] sm:min-h-[200px] max-h-[150px] sm:max-h-[300px] w-full rounded-md rounded-br-none rounded-bl-none border border-input bg-transparent px-3 py-2 border-b-0 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50 overflow-auto",
       },
     },
     extensions: [
@@ -155,108 +155,137 @@ const RichTextEditorToolbar = ({ editor }: { editor: Editor }) => {
   };
 
   return (
-    <div className="border border-input bg-transparent rounded-br-md rounded-bl-md p-1 flex flex-row items-center gap-1">
-      <Select
-        value={getCurrentHeadingValue()}
-        onValueChange={handleHeadingChange}
-      >
-        <SelectTrigger className="w-[130px] h-8">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {HEADING_OPTIONS.map((option) => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <Separator orientation="vertical" className="w-[1px] h-8" />
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("bold")}
-        onPressedChange={() => editor.chain().focus().toggleBold().run()}
-      >
-        <Bold className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("italic")}
-        onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-      >
-        <Italic className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("underline")}
-        onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-      >
-        <UnderlineIcon className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("strike")}
-        onPressedChange={() => editor.chain().focus().toggleStrike().run()}
-      >
-        <Strikethrough className="h-4 w-4" />
-      </Toggle>
+    <div className="border border-input bg-transparent rounded-br-md rounded-bl-md p-1 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-1">
+      <div className="flex flex-wrap items-center gap-1 w-full sm:w-auto">
+        <Select
+          value={getCurrentHeadingValue()}
+          onValueChange={handleHeadingChange}
+        >
+          <SelectTrigger className="w-full sm:w-[130px] h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {HEADING_OPTIONS.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
 
-      <Separator orientation="vertical" className="w-[1px] h-8" />
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("bulletList")}
-        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-      >
-        <List className="h-4 w-4" />
-      </Toggle>
-      <Toggle
-        size="sm"
-        pressed={editor.isActive("orderedList")}
-        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-      >
-        <ListOrdered className="h-4 w-4" />
-      </Toggle>
-      <Separator orientation="vertical" className="w-[1px] h-8" />
-      <Popover open={linkPopoverOpen} onOpenChange={setLinkPopoverOpen}>
-        <PopoverTrigger asChild>
+      <div className="flex flex-wrap items-center gap-1">
+        <Separator
+          orientation="vertical"
+          className="hidden sm:block w-[1px] h-8"
+        />
+        <div className="flex flex-wrap gap-1">
           <Toggle
             size="sm"
-            pressed={editor.isActive("link")}
-            onPressedChange={openLinkPopover}
+            pressed={editor.isActive("bold")}
+            onPressedChange={() => editor.chain().focus().toggleBold().run()}
           >
-            <LinkIcon className="h-4 w-4" />
+            <Bold className="h-4 w-4" />
           </Toggle>
-        </PopoverTrigger>
-        <PopoverContent side="bottom" align="start" className="mt-2">
-          <div className="flex flex-col gap-2 p-2">
-            <h1 className="text-sm font-medium">Link</h1>
-            <Input
-              value={linkUrl}
-              onChange={(e) => setLinkUrl(e.target.value)}
-              placeholder="https://example.com"
-              className="text-sm"
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleLinkSubmit();
-                }
-              }}
-            />
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setLinkPopoverOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button size="sm" onClick={handleLinkSubmit}>
-                Save
-              </Button>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("italic")}
+            onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+          >
+            <Italic className="h-4 w-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("underline")}
+            onPressedChange={() =>
+              editor.chain().focus().toggleUnderline().run()
+            }
+          >
+            <UnderlineIcon className="h-4 w-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("strike")}
+            onPressedChange={() => editor.chain().focus().toggleStrike().run()}
+          >
+            <Strikethrough className="h-4 w-4" />
+          </Toggle>
+        </div>
+
+        <Separator
+          orientation="vertical"
+          className="hidden sm:block w-[1px] h-8"
+        />
+        <div className="flex flex-wrap gap-1">
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("bulletList")}
+            onPressedChange={() =>
+              editor.chain().focus().toggleBulletList().run()
+            }
+          >
+            <List className="h-4 w-4" />
+          </Toggle>
+          <Toggle
+            size="sm"
+            pressed={editor.isActive("orderedList")}
+            onPressedChange={() =>
+              editor.chain().focus().toggleOrderedList().run()
+            }
+          >
+            <ListOrdered className="h-4 w-4" />
+          </Toggle>
+        </div>
+
+        <Separator
+          orientation="vertical"
+          className="hidden sm:block w-[1px] h-8"
+        />
+        <Popover open={linkPopoverOpen} onOpenChange={setLinkPopoverOpen}>
+          <PopoverTrigger asChild>
+            <Toggle
+              size="sm"
+              pressed={editor.isActive("link")}
+              onPressedChange={openLinkPopover}
+            >
+              <LinkIcon className="h-4 w-4" />
+            </Toggle>
+          </PopoverTrigger>
+          <PopoverContent
+            side="bottom"
+            align="start"
+            className="mt-2 w-[280px] sm:w-auto"
+          >
+            <div className="flex flex-col gap-2 p-2">
+              <h1 className="text-sm font-medium">Link</h1>
+              <Input
+                value={linkUrl}
+                onChange={(e) => setLinkUrl(e.target.value)}
+                placeholder="https://example.com"
+                className="text-sm"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleLinkSubmit();
+                  }
+                }}
+              />
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setLinkPopoverOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button size="sm" onClick={handleLinkSubmit}>
+                  Save
+                </Button>
+              </div>
             </div>
-          </div>
-        </PopoverContent>
-      </Popover>
+          </PopoverContent>
+        </Popover>
+      </div>
     </div>
   );
 };
