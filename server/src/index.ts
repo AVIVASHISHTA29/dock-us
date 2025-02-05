@@ -7,6 +7,24 @@ import { config } from "./config/index.js";
 import { resolvers } from "./graphql/resolvers/index.js";
 import { typeDefs } from "./graphql/schemas/index.js";
 
+const corsOptions = {
+  origin: ["https://dock-us-client.vercel.app", "http://localhost:3000"],
+  credentials: true,
+  methods: ["GET", "POST", "OPTIONS"],
+  allowedHeaders: [
+    "X-CSRF-Token",
+    "X-Requested-With",
+    "Accept",
+    "Accept-Version",
+    "Content-Length",
+    "Content-MD5",
+    "Content-Type",
+    "Date",
+    "X-Api-Version",
+    "Authorization",
+  ],
+};
+
 export const client = createClient({
   url: config.redis,
   socket: {
@@ -21,66 +39,53 @@ client.on("error", (err) => {
   console.error("Redis Client Error:", err);
 });
 
-async function startServer() {
-  const app = express();
+const app = express();
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
 
-  // More specific CORS configuration
-  const corsOptions = {
-    origin: "*",
-    credentials: true,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: [
-      "X-CSRF-Token",
-      "X-Requested-With",
-      "Accept",
-      "Accept-Version",
-      "Content-Length",
-      "Content-MD5",
-      "Content-Type",
-      "Date",
-      "X-Api-Version",
-      "Authorization",
-    ],
-  };
+let isServerStarted = false;
 
-  try {
-    await client.connect();
-  } catch (error) {
-    console.error("Failed to connect to Redis:", error);
-    throw error;
+async function initServer() {
+  if (!isServerStarted) {
+    try {
+      await client.connect();
+      await server.start();
+      isServerStarted = true;
+    } catch (error) {
+      console.error("Failed to initialize server:", error);
+      throw error;
+    }
   }
+}
 
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-  });
+// Apply CORS middleware globally
+app.use(cors(corsOptions));
+app.use(express.json());
 
-  await server.start();
+// Add OPTIONS handler for preflight requests
+app.options("*", cors(corsOptions));
 
-  // Remove the global CORS middleware
-  app.use(express.json());
-
-  // Single CORS configuration for GraphQL endpoint
-  app.use(
-    "/graphql",
-    cors(corsOptions),
-    expressMiddleware(server, {
+app.use("/graphql", async (req, res, next) => {
+  try {
+    await initServer();
+    return expressMiddleware(server, {
       context: async ({ req }) => ({ req }),
-    }) as unknown as express.RequestHandler
-  );
+    })(req, res, next);
+  } catch (error) {
+    console.error("Error in GraphQL middleware:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
+// For local development
+if (process.env.NODE_ENV !== "production") {
   const port = process.env.PORT || 4000;
   app.listen(port, () => {
     console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
   });
 }
-
-startServer().catch((error) => {
-  console.error("Failed to start server:", error);
-  client.quit().finally(() => {
-    process.exit(1);
-  });
-});
 
 process.on("SIGTERM", () => {
   console.log("SIGTERM received. Closing Redis connection...");
@@ -88,3 +93,6 @@ process.on("SIGTERM", () => {
     process.exit(0);
   });
 });
+
+// Export the Express app as the default export for Vercel
+export default app;
