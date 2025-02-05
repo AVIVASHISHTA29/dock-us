@@ -2,32 +2,54 @@ import { ApolloServer } from "@apollo/server";
 import { expressMiddleware } from "@apollo/server/express4";
 import cors from "cors";
 import express from "express";
+import { createClient } from "redis";
+import { config } from "./config/index.js";
 import { resolvers } from "./graphql/resolvers/index.js";
 import { typeDefs } from "./graphql/schemas/index.js";
 
-import { createClient } from "redis";
-import { config } from "./config/index.js";
-
 export const client = createClient({
   url: config.redis,
+  socket: {
+    reconnectStrategy: (retries) => {
+      const delay = Math.min(retries * 50, 3000);
+      return delay;
+    },
+  },
 });
 
-client.on("error", function (err) {
-  throw err;
+client.on("error", (err) => {
+  console.error("Redis Client Error:", err);
 });
 
 async function startServer() {
-  await client.connect();
   const app = express();
 
-  // Configure CORS with all origins allowed
+  // More specific CORS configuration
   const corsOptions = {
     origin: "*",
+    credentials: true,
     methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: [
+      "X-CSRF-Token",
+      "X-Requested-With",
+      "Accept",
+      "Accept-Version",
+      "Content-Length",
+      "Content-MD5",
+      "Content-Type",
+      "Date",
+      "X-Api-Version",
+      "Authorization",
+    ],
   };
 
-  // Initialize Apollo Server
+  try {
+    await client.connect();
+  } catch (error) {
+    console.error("Failed to connect to Redis:", error);
+    throw error;
+  }
+
   const server = new ApolloServer({
     typeDefs,
     resolvers,
@@ -35,14 +57,10 @@ async function startServer() {
 
   await server.start();
 
-  // Apply CORS middleware first
-  app.use(cors(corsOptions));
+  // Remove the global CORS middleware
   app.use(express.json());
 
-  // Handle preflight requests
-  app.options("/graphql", cors(corsOptions));
-
-  // Apply Apollo middleware with CORS options
+  // Single CORS configuration for GraphQL endpoint
   app.use(
     "/graphql",
     cors(corsOptions),
@@ -55,10 +73,18 @@ async function startServer() {
   app.listen(port, () => {
     console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
   });
-  client.set("hi", "bye");
 }
 
 startServer().catch((error) => {
   console.error("Failed to start server:", error);
-  process.exit(1);
+  client.quit().finally(() => {
+    process.exit(1);
+  });
+});
+
+process.on("SIGTERM", () => {
+  console.log("SIGTERM received. Closing Redis connection...");
+  client.quit().finally(() => {
+    process.exit(0);
+  });
 });
