@@ -19,8 +19,8 @@ export const GET_MOVIE = gql`
 `;
 
 export const GET_POPULAR_MOVIES = gql`
-  query GetPopularMovies {
-    popularMovies {
+  query GetPopularMovies($page: Int!) {
+    popularMovies(page: $page) {
       id
       title
       overview
@@ -31,8 +31,8 @@ export const GET_POPULAR_MOVIES = gql`
 `;
 
 export const SEARCH_MOVIES = gql`
-  query SearchMovies($query: String!) {
-    searchMovies(query: $query) {
+  query SearchMovies($query: String!, $page: Int!) {
+    searchMovies(query: $query, page: $page) {
       id
       title
       overview

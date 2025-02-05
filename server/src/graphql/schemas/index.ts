@@ -1,8 +1,8 @@
 export const typeDefs = `#graphql
   # The Query type defines all available queries that clients can execute
   type Query {
-    popularMovies: [Movie!]!
-    searchMovies(query: String!): [Movie!]!
+    popularMovies(page:Int!): [Movie!]!
+    searchMovies(query: String!, page:Int): [Movie!]!
     movie(id: Int!): Movie
     movieReviews(movieId: Int!): [Review!]!
   }

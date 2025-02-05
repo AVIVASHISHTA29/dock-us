@@ -5,7 +5,19 @@ import express from "express";
 import { resolvers } from "./graphql/resolvers/index.js";
 import { typeDefs } from "./graphql/schemas/index.js";
 
+import { createClient } from "redis";
+import { config } from "./config/index.js";
+
+export const client = createClient({
+  url: config.redis,
+});
+
+client.on("error", function (err) {
+  throw err;
+});
+
 async function startServer() {
+  await client.connect();
   const app = express();
 
   // Configure CORS with all origins allowed
@@ -43,6 +55,7 @@ async function startServer() {
   app.listen(port, () => {
     console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
   });
+  client.set("hi", "bye");
 }
 
 startServer().catch((error) => {

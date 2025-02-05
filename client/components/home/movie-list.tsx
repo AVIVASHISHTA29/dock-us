@@ -1,4 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import {
@@ -23,15 +32,46 @@ import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { MovieGridSkeleton } from "../skeletons/movie-grid-skeleton";
 
+function PaginationComponent({ page, setPage }: any) {
+  const goBack = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
+
+  const goForward = () => {
+    setPage(page + 1);
+  };
+
+  return (
+    <div className="flex w-full">
+      <Pagination>
+        <PaginationContent>
+          <PaginationItem onClick={goBack}>
+            <PaginationPrevious href="#" />
+          </PaginationItem>
+          <PaginationItem>
+            <PaginationLink href="#">{page}</PaginationLink>
+          </PaginationItem>
+          <PaginationItem onClick={goForward}>
+            <PaginationNext href="#" />
+          </PaginationItem>
+        </PaginationContent>
+      </Pagination>
+    </div>
+  );
+}
+
 export default function MovieList() {
   const searchParams = useSearchParams();
   const searchQuery = searchParams.get("query");
   const [sortBy, setSortBy] = useState<"rating" | "title">("rating");
+  const [page, setPage] = useState<number>(1);
 
   const { loading, error, data } = useQuery<
     SearchMoviesResponse | PopularMoviesResponse
   >(searchQuery ? SEARCH_MOVIES : GET_POPULAR_MOVIES, {
-    variables: searchQuery ? { query: searchQuery } : undefined,
+    variables: searchQuery ? { query: searchQuery, page } : { page },
   });
 
   if (loading) return <MovieGridSkeleton />;
@@ -70,7 +110,8 @@ export default function MovieList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+      <div className="flex justify-between w-full">
+        <PaginationComponent page={page} setPage={setPage} />
         <Select
           value={sortBy}
           onValueChange={(value: "rating" | "title") => setSortBy(value)}

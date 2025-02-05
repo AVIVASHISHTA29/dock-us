@@ -1,29 +1,29 @@
 "use client";
 
 import { Input } from "@/components/ui/input";
+import { useDebounce } from "@/hooks/use-debounce";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
-import { useDebouncedCallback } from "use-debounce";
 
 export default function SearchBar() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const { replace } = useRouter();
-  const [isPending, startTransition] = useTransition();
-  console.log("isPending", isPending);
+  const [, startTransition] = useTransition();
 
-  const handleSearch = useDebouncedCallback((term: string) => {
+  const changeUrl = (str: string) => {
     const params = new URLSearchParams(searchParams.toString());
-    if (term) {
-      params.set("query", term);
+    if (str) {
+      params.set("query", str);
     } else {
       params.delete("query");
     }
-
     startTransition(() => {
       replace(`${pathname}?${params.toString()}`);
     });
-  }, 300);
+  };
+
+  const handleSearch = useDebounce((str: string) => changeUrl(str), 1000);
 
   return (
     <div className="w-full max-w-xl mx-auto mb-8">

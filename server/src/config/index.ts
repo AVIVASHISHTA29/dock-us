@@ -12,4 +12,5 @@ export const config = {
   server: {
     port: process.env.PORT || 4000,
   },
+  redis: process.env.REDIS_KEY,
 } as const;
