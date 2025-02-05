@@ -14,14 +14,19 @@ export class TMDBService {
     try {
       if (!config.tmdb.apiKey) {
         console.error("TMDB_API_KEY is not set in environment variables");
-        return [];
+        return {
+          page: 1,
+          results: [],
+          totalPages: 0,
+          totalResults: 0,
+        };
       }
 
       const popularMovies = await client.get(`popular-movies-${page}`);
 
       if (popularMovies) {
-        const data = popularMovies as any as TMDBResponse;
-        return JSON.parse(data.results as any);
+        const data = JSON.parse(popularMovies as string);
+        return data;
       } else {
         const response = await fetch(
           `${config.tmdb.baseUrl}/discover/movie?language=en-US&page=${page}&sort_by=popularity.desc`,
@@ -33,19 +38,31 @@ export class TMDBService {
         }
 
         const data = (await response.json()) as TMDBResponse;
+        const paginatedResponse = {
+          page: data.page,
+          results: data.results,
+          totalPages: data.total_pages > 50 ? 50 : data.total_pages, // TMDB IS FAILING FOR MORE THAN 50 PAGES
+          totalResults: data.total_results,
+        };
+
         await client.set(
           `popular-movies-${page}`,
-          JSON.stringify(data.results),
+          JSON.stringify(paginatedResponse),
           {
             EX: 60,
             NX: true,
           }
         );
-        return data.results;
+        return paginatedResponse;
       }
     } catch (error) {
       console.error("Error fetching popular movies:", error);
-      return [];
+      return {
+        page: 1,
+        results: [],
+        totalPages: 0,
+        totalResults: 0,
+      };
     }
   }
 
@@ -53,13 +70,18 @@ export class TMDBService {
     try {
       if (!config.tmdb.apiKey) {
         console.error("TMDB_API_KEY is not set in environment variables");
-        return [];
+        return {
+          page: 1,
+          results: [],
+          totalPages: 0,
+          totalResults: 0,
+        };
       }
 
       const searchMovies = await client.get(`search-movies-${query}-${page}`);
 
       if (searchMovies) {
-        return JSON.parse(searchMovies as any);
+        return JSON.parse(searchMovies as string);
       }
 
       const response = await fetch(
@@ -76,18 +98,30 @@ export class TMDBService {
       }
 
       const data = (await response.json()) as TMDBResponse;
+      const paginatedResponse = {
+        page: data.page,
+        results: data.results,
+        totalPages: data.total_pages,
+        totalResults: data.total_results,
+      };
+
       await client.set(
         `search-movies-${query}-${page}`,
-        JSON.stringify(data.results),
+        JSON.stringify(paginatedResponse),
         {
           EX: 60,
           NX: true,
         }
       );
-      return data.results;
+      return paginatedResponse;
     } catch (error) {
       console.error("Error searching movies:", error);
-      return [];
+      return {
+        page: 1,
+        results: [],
+        totalPages: 0,
+        totalResults: 0,
+      };
     }
   }
 

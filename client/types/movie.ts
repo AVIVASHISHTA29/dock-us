@@ -9,15 +9,22 @@ export interface Movie {
   title: string;
   overview: string;
   posterPath: string | null;
-  releaseDate?: string;
+  releaseDate: string;
   voteAverage: number;
   reviews?: Review[];
 }
 
+export interface MoviePaginatedResponse {
+  page: number;
+  results: Movie[];
+  totalPages: number;
+  totalResults: number;
+}
+
 export interface PopularMoviesResponse {
-  popularMovies: Movie[];
+  popularMovies: MoviePaginatedResponse;
 }
 
 export interface SearchMoviesResponse {
-  searchMovies: Movie[];
+  searchMovies: MoviePaginatedResponse;
 }

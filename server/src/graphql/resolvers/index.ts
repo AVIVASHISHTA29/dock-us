@@ -8,15 +8,25 @@ const reviews: Review[] = [];
 export const resolvers = {
   Query: {
     popularMovies: async (_: any, { page }: { page: number }) => {
-      const movies = await TMDBService.getPopularMovies(page);
-      return movies.map(transformMovieData);
+      const response = await TMDBService.getPopularMovies(page);
+      return {
+        page: response.page,
+        results: response.results.map(transformMovieData),
+        totalPages: response.totalPages,
+        totalResults: response.totalResults,
+      };
     },
     searchMovies: async (
       _: any,
       { query, page }: { query: string; page: number }
     ) => {
-      const movies = await TMDBService.searchMovies(query, page);
-      return movies.map(transformMovieData);
+      const response = await TMDBService.searchMovies(query, page);
+      return {
+        page: response.page,
+        results: response.results.map(transformMovieData),
+        totalPages: response.totalPages,
+        totalResults: response.totalResults,
+      };
     },
     movie: async (_: any, { id }: { id: number }) => {
       const movie = await TMDBService.getMovieById(id);

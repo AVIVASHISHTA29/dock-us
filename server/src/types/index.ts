@@ -9,7 +9,10 @@ export interface TMDBMovieResult {
 }
 
 export interface TMDBResponse {
+  page: number;
   results: TMDBMovieResult[];
+  total_pages: number;
+  total_results: number;
 }
 
 export interface TMDBMovieDetails extends TMDBMovieResult {

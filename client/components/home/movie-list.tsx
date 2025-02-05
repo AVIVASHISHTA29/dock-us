@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 import {
   Pagination,
@@ -18,21 +17,25 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { GET_POPULAR_MOVIES, SEARCH_MOVIES } from "@/graphql/movie";
-import {
-  Movie,
-  PopularMoviesResponse,
-  SearchMoviesResponse,
-} from "@/types/movie";
+import { PopularMoviesResponse, SearchMoviesResponse } from "@/types/movie";
 import { useQuery } from "@apollo/client";
 import { motion } from "framer-motion";
 import { Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MovieGridSkeleton } from "../skeletons/movie-grid-skeleton";
 
-function PaginationComponent({ page, setPage }: any) {
+function PaginationComponent({
+  page,
+  totalPages,
+  setPage,
+}: {
+  page: number;
+  totalPages: number;
+  setPage: (page: number) => void;
+}) {
   const goBack = () => {
     if (page > 1) {
       setPage(page - 1);
@@ -40,21 +43,84 @@ function PaginationComponent({ page, setPage }: any) {
   };
 
   const goForward = () => {
-    setPage(page + 1);
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
   };
+
+  const currentGroup = Math.floor((page - 1) / 5);
+  const startPage = currentGroup * 5 + 1;
+  const endPage = Math.min(startPage + 4, totalPages);
 
   return (
     <div className="flex w-full">
       <Pagination>
         <PaginationContent>
-          <PaginationItem onClick={goBack}>
-            <PaginationPrevious href="#" />
-          </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#">{page}</PaginationLink>
+            <PaginationPrevious
+              href="#"
+              onClick={goBack}
+              className={page <= 1 ? "pointer-events-none opacity-50" : ""}
+            />
           </PaginationItem>
-          <PaginationItem onClick={goForward}>
-            <PaginationNext href="#" />
+
+          {startPage > 1 && (
+            <>
+              <PaginationItem>
+                <PaginationLink href="#" onClick={() => setPage(1)}>
+                  1
+                </PaginationLink>
+              </PaginationItem>
+              {startPage > 2 && (
+                <PaginationItem>
+                  <PaginationLink href="#" className="pointer-events-none">
+                    ...
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+            </>
+          )}
+
+          {Array.from(
+            { length: endPage - startPage + 1 },
+            (_, i) => startPage + i
+          ).map((pageNum) => (
+            <PaginationItem key={pageNum}>
+              <PaginationLink
+                href="#"
+                onClick={() => setPage(pageNum)}
+                isActive={pageNum === page}
+              >
+                {pageNum}
+              </PaginationLink>
+            </PaginationItem>
+          ))}
+
+          {endPage < totalPages && (
+            <>
+              {endPage < totalPages - 1 && (
+                <PaginationItem>
+                  <PaginationLink href="#" className="pointer-events-none">
+                    ...
+                  </PaginationLink>
+                </PaginationItem>
+              )}
+              <PaginationItem>
+                <PaginationLink href="#" onClick={() => setPage(totalPages)}>
+                  {totalPages}
+                </PaginationLink>
+              </PaginationItem>
+            </>
+          )}
+
+          <PaginationItem>
+            <PaginationNext
+              href="#"
+              onClick={goForward}
+              className={
+                page >= totalPages ? "pointer-events-none opacity-50" : ""
+              }
+            />
           </PaginationItem>
         </PaginationContent>
       </Pagination>
@@ -67,6 +133,10 @@ export default function MovieList() {
   const searchQuery = searchParams.get("query");
   const [sortBy, setSortBy] = useState<"rating" | "title">("rating");
   const [page, setPage] = useState<number>(1);
+
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
 
   const { loading, error, data } = useQuery<
     SearchMoviesResponse | PopularMoviesResponse
@@ -83,21 +153,19 @@ export default function MovieList() {
       </div>
     );
 
-  let movies: Movie[] = searchQuery
+  const { results: movies, totalPages } = searchQuery
     ? (data as SearchMoviesResponse)?.searchMovies
     : (data as PopularMoviesResponse)?.popularMovies;
 
   // Sort movies based on selected criteria
-  if (movies) {
-    movies = [...movies].sort((a, b) => {
-      if (sortBy === "rating") {
-        return b.voteAverage - a.voteAverage;
-      }
-      return a.title.localeCompare(b.title);
-    });
-  }
+  const sortedMovies = [...movies].sort((a, b) => {
+    if (sortBy === "rating") {
+      return b.voteAverage - a.voteAverage;
+    }
+    return a.title.localeCompare(b.title);
+  });
 
-  if (!movies?.length) {
+  if (!sortedMovies?.length) {
     return (
       <div className="text-center py-12">
         <p className="text-xl font-semibold">No movies found</p>
@@ -110,8 +178,12 @@ export default function MovieList() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between w-full">
-        <PaginationComponent page={page} setPage={setPage} />
+      <div className="flex justify-between w-full items-center">
+        <PaginationComponent
+          page={page}
+          totalPages={totalPages}
+          setPage={setPage}
+        />
         <Select
           value={sortBy}
           onValueChange={(value: "rating" | "title") => setSortBy(value)}
@@ -127,7 +199,7 @@ export default function MovieList() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {movies.map((movie, index) => (
+        {sortedMovies.map((movie, index) => (
           <motion.div
             key={movie.id}
             initial={{ opacity: 0, y: 20 }}

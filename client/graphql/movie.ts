@@ -21,23 +21,35 @@ export const GET_MOVIE = gql`
 export const GET_POPULAR_MOVIES = gql`
   query GetPopularMovies($page: Int!) {
     popularMovies(page: $page) {
-      id
-      title
-      overview
-      posterPath
-      voteAverage
+      page
+      results {
+        id
+        title
+        overview
+        posterPath
+        releaseDate
+        voteAverage
+      }
+      totalPages
+      totalResults
     }
   }
 `;
 
 export const SEARCH_MOVIES = gql`
-  query SearchMovies($query: String!, $page: Int!) {
+  query SearchMovies($query: String!, $page: Int) {
     searchMovies(query: $query, page: $page) {
-      id
-      title
-      overview
-      posterPath
-      voteAverage
+      page
+      results {
+        id
+        title
+        overview
+        posterPath
+        releaseDate
+        voteAverage
+      }
+      totalPages
+      totalResults
     }
   }
 `;
