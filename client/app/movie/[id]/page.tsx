@@ -1,5 +1,6 @@
 "use client";
 
+import MovieChat from "@/components/movie/movie-chat";
 import { MovieDetails } from "@/components/movie/movie-details";
 import { MovieDetailSkeleton } from "@/components/skeletons/movie-detail-skeleton";
 import { Button } from "@/components/ui/button";
@@ -42,6 +43,7 @@ export default function MoviePage() {
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Movies
         </Button>
         {movie && <MovieDetails movie={movie} onSubmitReview={submitReview} />}
+        {movie && <MovieChat movie={movie} />}
       </div>
     </motion.main>
   );
