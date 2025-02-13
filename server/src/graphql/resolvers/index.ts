@@ -1,9 +1,7 @@
 import { config } from "../../config/index.js";
+import { ReviewsService } from "../../services/reviews.service.js";
 import { TMDBService } from "../../services/tmdb.service.js";
-import { Movie, Review } from "../../types/index.js";
-
-// In-memory storage for reviews (in a real app, you'd use a database)
-const reviews: Review[] = [];
+import { Movie } from "../../types/index.js";
 
 export const resolvers = {
   Query: {
@@ -33,7 +31,7 @@ export const resolvers = {
       return movie ? transformMovieData(movie) : null;
     },
     movieReviews: (_: any, { movieId }: { movieId: number }) => {
-      return reviews.filter((review) => review.movieId === movieId);
+      return ReviewsService.getReviewsByMovieId(movieId);
     },
   },
   Mutation: {
@@ -41,14 +39,7 @@ export const resolvers = {
       _: any,
       { movieId, content }: { movieId: number; content: string }
     ) => {
-      const review: Review = {
-        id: Date.now().toString(),
-        movieId,
-        content,
-        createdAt: new Date().toISOString(),
-      };
-      reviews.push(review);
-      return review;
+      return ReviewsService.createReview(movieId, content);
     },
   },
   Movie: {
@@ -56,13 +47,7 @@ export const resolvers = {
       movie.posterPath
         ? `${config.tmdb.imageBaseUrl}${movie.posterPath}`
         : null,
-    reviews: (movie: Movie) =>
-      reviews
-        .filter((review) => review.movieId === movie.id)
-        .sort(
-          (a, b) =>
-            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        ),
+    reviews: (movie: Movie) => ReviewsService.getReviewsByMovieId(movie.id),
   },
 };
 

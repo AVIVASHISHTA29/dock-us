@@ -13,4 +13,8 @@ export const config = {
     port: process.env.PORT || 4000,
   },
   redis: process.env.REDIS_KEY,
+  supabase: {
+    url: process.env.SUPABASE_URL!,
+    key: process.env.SUPABASE_KEY!,
+  },
 } as const;
