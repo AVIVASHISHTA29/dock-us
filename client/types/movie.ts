@@ -28,3 +28,11 @@ export interface PopularMoviesResponse {
 export interface SearchMoviesResponse {
   searchMovies: MoviePaginatedResponse;
 }
+
+export interface SimilarMovie {
+  id: number;
+  title: string;
+  overview: string;
+  releaseDate: string;
+  rating: number;
+}
